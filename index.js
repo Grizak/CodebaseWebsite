@@ -27,8 +27,7 @@ mongoose
 
 // Test route
 app.get("/", async (req, res) => {
-  const users = await User.find();
-  res.send(users);
+  res.render("index");
 });
 
 // Routes

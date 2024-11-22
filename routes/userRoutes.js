@@ -8,7 +8,7 @@ const crypto = require("crypto");
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
   try {
-    const verificationToken = crypto.randomBytes(512).toString("hex");
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const user = new User({ username, email, password, verificationToken });
     await user.save();
