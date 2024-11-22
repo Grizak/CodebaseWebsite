@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
+const User = require("./models/User");
 
 const app = express();
 
@@ -25,9 +26,13 @@ mongoose
 //app.use(passport.initialize());
 
 // Test route
-app.get("/", (req, res) => {
-  res.send("Welcome to the Codebase Website Backend!");
+app.get("/", async (req, res) => {
+  const users = await User.find();
+  res.send(users);
 });
+
+// Routes
+app.use("/users", require("./routes/userRoutes"));
 
 // Start the server
 const PORT = process.env.PORT || 3000;
