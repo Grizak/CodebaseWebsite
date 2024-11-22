@@ -15,16 +15,18 @@
         const email = document.querySelector("h2 strong").textContent;
 
         fetch(`/users/checkemail?email=${email}`)
-            .then(response.json)
-            .then(data) {
-                if (data) {
-                    window.location.href = '/login';
-                }
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.isVerified) {
+              window.location.href = "/login";
             }
-            .catch (err) {
+          })
+          .catch(err, () => console.error(err));
 
-            }
+        setTimeout(pollEmail, 5000);
       }
+
+      pollEmail();
     </script>
   </body>
 </html>

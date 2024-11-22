@@ -107,4 +107,21 @@ router.get("/verify", (req, res) => {
   res.render("verify", { email });
 });
 
+router.get("/verifyemail", async (req, res) => {
+    try {
+        const token = req.query.token;
+
+        const user = await User.findOne( verificationToken: token );
+        if (!user) return res.json({ message: "Invalid or expired token" });
+
+        user.isVerified = true;
+        await user.save;
+
+        res.json( message: "Email verified" );
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 module.exports = router;
