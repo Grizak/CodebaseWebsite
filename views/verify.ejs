@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Your Email</title>
+  </head>
+  <body>
+    <h2>We have sent an email to <strong><%= email %></strong></h2>
+
+    <script>
+      // Poll to see if the user has verified their email and then send them to the login page
+
+      function pollEmail() {
+        const email = document.querySelector("h2 strong").textContent;
+
+        fetch(`/users/checkemail?email=${email}`)
+            .then(response.json)
+            .then(data) {
+                if (data) {
+                    window.location.href = '/login';
+                }
+            }
+            .catch (err) {
+
+            }
+      }
+    </script>
+  </body>
+</html>

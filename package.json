@@ -4,11 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js"
+    "start": "node .",
+    "dev": "nodemon ."
   },
   "keywords": [],
-  "author": "Ives van Hoorne",
+  "author": "Isak Grönlund",
   "license": "MIT",
-  "devDependencies": {},
-  "dependencies": {}
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.2",
+    "nodemailer": "^6.9.16",
+    "passport": "^0.7.0"
+  }
 }
