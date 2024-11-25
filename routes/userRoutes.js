@@ -4,6 +4,7 @@ const router = express.Router();
 const transporter = require("../config/nodemailerConfig");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const authenticate = require("../middleware/auth");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -254,6 +255,54 @@ router.post("/reset-password", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/profile", authenticate, async (req, res) => {
+  try {
+    console.log(req.user);
+    const user = await User.findById(req.user.id); // req.user contains the authenticated user
+    console.log(user);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.render("profile", { user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/profile/update", authenticate, async (req, res) => {
+  const { username, bio, profilePicture } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id); // req.user contains the authenticated user
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.username = username || user.username;
+    user.bio = bio || user.bio;
+    user.profilePicture = profilePicture || user.profilePicture;
+    user.updatedAt = Date.now();
+
+    await user.save();
+
+    res.status(200).json({ message: "Profile updated successfully", user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/profile/update", authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).send("User not found");
+
+    res.render("editProfile", { user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
   }
 });
 

@@ -11,12 +11,15 @@
   "tasks": {
     "start": {
       "name": "start",
-      "command": "yarn start",
-      "runAtStart": true
+      "command": "yarn start"
     },
     "install": {
       "name": "install dependencies",
       "command": "yarn install"
+    },
+    "dev": {
+      "name": "dev",
+      "command": "npm run dev"
     }
   }
 }

@@ -42,6 +42,17 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpiry: {
     type: Date,
   },
+  profilePicture: {
+    type: String,
+  }, // URL or file path for the profile picture
+  bio: {
+    type: String,
+    maxlength: 200,
+  }, // Short user bio
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // Hash password before saving

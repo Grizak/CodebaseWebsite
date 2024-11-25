@@ -33,6 +33,11 @@ app.get("/", async (req, res) => {
 // Routes
 app.use("/users", require("./routes/userRoutes"));
 
+// Wildcard route
+app.all("*", (req, res) => {
+  res.render("404");
+});
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
