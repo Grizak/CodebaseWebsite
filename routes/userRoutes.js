@@ -3,6 +3,9 @@ const User = require("../models/User");
 const router = express.Router();
 const transporter = require("../config/nodemailerConfig");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Register a new user
 router.post("/register", async (req, res) => {
@@ -12,6 +15,8 @@ router.post("/register", async (req, res) => {
 
     const user = new User({ username, email, password, verificationToken });
     await user.save();
+
+    return res.json({ message: "User registered successfully" });
 
     const verificationURL = `${process.env.ROOT}/users/verifyemail?token=${verificationToken}`;
 
@@ -121,6 +126,134 @@ router.get("/verifyemail", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/checkemail", async (req, res) => {
+  const email = req.query.email;
+
+  const user = await User.findOne({ email });
+
+  return user;
+});
+
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid email" });
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+
+    if (!user.isVerified)
+      return res
+        .status(400)
+        .json({ message: "Please verify your email before logging in" });
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.cookie("token", token, {
+      httponly: true,
+      secure: true,
+      maxage: 3600000,
+    });
+
+    res.redirect("/");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.redirect("/login");
+});
+
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = Date.now() + 3600000; // Token valid for 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = resetTokenExpiry;
+    await user.save();
+
+    const resetURL = `${process.env.ROOT}/users/reset-password?token=${resetToken}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset Request",
+      text: `Click the following link to reset your password: ${resetURL}`,
+      html: `
+        <p>Hello,</p>
+        <p>You requested a password reset. Click the link below to reset your password:</p>
+        <a href="${resetURL}">Reset Password</a>
+        <p>If you did not request this, you can safely ignore this email.</p>
+      `,
+    });
+
+    res.json({ message: "Password reset email sent" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/reset-password", async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() }, // Ensure token is still valid
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    res.render("reset-password", { token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  const { token, password } = req.body;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.password = password; // This will trigger the `pre-save` hook to hash the password
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+    await user.save();
+
+    res.redirect("/login"); // Redirect to login page after successful reset
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
